@@ -37,6 +37,7 @@
 #include "vid_drv.h"
 #include "nes_pal.h"
 #include "nesinput.h"
+#include "../glitch/ppu_glitch.h"
 
 
 #define MAP4_PPU_EDGE_IRQ 1   /* use true A12-edge IRQs for MMC3 */
@@ -62,16 +63,10 @@ INLINE void ppu_fetch_delay(void)
 
 
 
+INLINE uint8 *ppu_mem_ptr(uint16 x);
 
-#define PPU_MEM_PTR(x)                                                       \
-    ( (mapper_ppu_hook && ((x) & 0x2000) == 0)                               \
-      ? ( ppu_fetch_delay(),                                                 \
-          mapper_ppu_hook((uint16)((x) & 0x1FFF)),                           \
-          &ppu.page[(x) >> 10][(x)] )                                        \
-      : &ppu.page[(x) >> 10][(x)] )
-
-
-#define PPU_MEM(x)   (*PPU_MEM_PTR(x))
+#define PPU_MEM_PTR(x) ppu_mem_ptr(x)
+#define PPU_MEM(x)     (*PPU_MEM_PTR(x))
 /* Background (color 0) and solid sprite pixel flags */
 #define  BG_TRANS             0x80
 #define  SP_PIXEL             0x40
@@ -129,6 +124,18 @@ INLINE void inc_v_rendering(void)
 }
 /* ---------- optional mapper callback (MMC3 edge IRQ, etc.) ---------- */
 static void (*mapper_ppu_hook)(uint16 addr) = NULL;
+
+INLINE uint8 *ppu_mem_ptr(uint16 x)
+{
+    x = ppu_glitch_addr(x);
+
+    if (mapper_ppu_hook && ((x & 0x2000) == 0)) {
+        ppu_fetch_delay();
+        mapper_ppu_hook((uint16)(x & 0x1FFF));
+    }
+
+    return &ppu.page[x >> 10][x];
+}
 
 void ppu_set_mapper_hook(void (*fn)(uint16 addr))
 {
