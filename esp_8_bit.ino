@@ -21,6 +21,7 @@
 #define PERF  // some stats about where we spend our time
 #include "src/emu.h"
 #include "src/video_out.h"
+#include "src/gpio_input.h"
 
 // esp_8_bit
 // Atari 8 computers, NES and SMS game consoles on your TV with nothing more than a ESP32 and a sense of nostalgia
@@ -116,6 +117,7 @@ void setup()
   mount_filesystem();                       // mount the filesystem!
   _emu = NewEmulator();                     // create the emulator!
   hid_init("emu32");                        // bluetooth hid on core 1!
+  gpio_input_init();                         // initialize GPIO buttons
 
   #ifdef SINGLE_CORE
   emu_init();

@@ -149,6 +149,7 @@ extern "C" int unpack(const char* dst_path, const uint8_t* d, int len);
 
 void audio_write_16(const int16_t* s, int len, int channels);
 int get_hid_ir(uint8_t* dst);
+int get_hid_all(uint8_t* dst);
 uint32_t generic_map(uint32_t m, const uint32_t* target);
 
 Emu* NewAtari800(int ntsc = 1);
