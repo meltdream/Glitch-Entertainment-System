@@ -3,11 +3,18 @@
 
 #include <stdint.h>
 
+/* Glitch control - change to 1 to enable, 0 to disable */
+#define PPU_GLITCH_ENABLED 0
+
 /* Apply simulated hardware faults to a PPU address.
-   Example: A04 stuck low forces bit 4 to 0. */
+   Example: A05 stuck low forces bit 5 to 0. */
 static inline uint16_t ppu_glitch_addr(uint16_t addr)
 {
-    return addr & ~0x0010; /* force A04 = 0 */
+#if PPU_GLITCH_ENABLED
+    return addr & ~0x0020; /* force A05 = 0 */
+#else
+    return addr; /* glitch disabled - return address unchanged */
+#endif
 }
 
 #endif /* PPU_GLITCH_H */
