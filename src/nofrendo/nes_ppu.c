@@ -481,7 +481,7 @@ case PPU_VDATA:
     if ((ppu.bg_on || ppu.obj_on) && !ppu.vram_accessible) {
         /* Rendering fetches own the bus → open‑bus value            */
         ppu.vdata_latch = 0xFF;
-        log_printf("VRAM read at $%04X, scanline %d\n",
+        nofrendo_log_printf("VRAM read at $%04X, scanline %d\n",
                    ppu.vaddr, nes_getcontextptr()->scanline);
     } else {
         uint32_t addr = ppu.vaddr & 0x3FFF;      /* mirror into 16 kB range */
@@ -608,7 +608,7 @@ void ppu_write(uint32 address, uint8 value)
          if ((ppu.bg_on || ppu.obj_on) && !ppu.vram_accessible)
          {
                /* Illegal during the fetch phase → emulate bus corruption */
-               log_printf("VRAM write %04X on active scan‑line %d\n",
+               nofrendo_log_printf("VRAM write %04X on active scan‑line %d\n",
                         ppu.vaddr, nes_getcontextptr()->scanline);
                PPU_MEM(ppu.vaddr) = 0xFF;
          }
