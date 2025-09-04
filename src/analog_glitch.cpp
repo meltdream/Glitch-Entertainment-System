@@ -42,6 +42,15 @@ static void update_glitch_mask(uint8_t slot) {
     }
 }
 
+void analog_glitch_set_slot(uint8_t slot) {
+    if (slot > GLITCH_MAX_PINS) {
+        slot = GLITCH_MAX_PINS;
+    }
+    _glitch_state.current_slot = slot;
+    _glitch_state.last_slot = slot;
+    update_glitch_mask(slot);
+}
+
 void analog_glitch_update() {
     _debug_call_count++;
     
@@ -144,6 +153,7 @@ void analog_glitch_init() {
 }
 
 void analog_glitch_update() {}
+void analog_glitch_set_slot(uint8_t slot) { (void)slot; }
 
 uint8_t get_glitch_slot() {
     return 0;

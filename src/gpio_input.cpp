@@ -1,5 +1,6 @@
 #include "gpio_input.h"
 #include "emu.h"
+#include "midi_input.h"
 
 #ifdef ESP_PLATFORM
 #include "driver/gpio.h"
@@ -66,6 +67,8 @@ int get_hid_gpio(uint8_t* dst) {
 int get_hid_all(uint8_t* dst) {
     int n = 0;
     if ((n = get_hid_gpio(dst)))
+        return n;
+    if ((n = get_hid_midi(dst)))
         return n;
     if ((n = get_hid_ir(dst)))
         return n;

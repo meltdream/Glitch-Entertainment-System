@@ -23,6 +23,7 @@
 #include "src/video_out.h"
 #include "src/gpio_input.h"
 #include "src/analog_glitch.h"
+#include "src/midi_input.h"
 
 // esp_8_bit
 // Atari 8 computers, NES and SMS game consoles on your TV with nothing more than a ESP32 and a sense of nostalgia
@@ -120,6 +121,7 @@ void setup()
   hid_init("emu32");                        // bluetooth hid on core 1!
   gpio_input_init();                        // initialize gpio button inputs
   analog_glitch_init();                     // initialize analog glitch control
+  midi_input_init();                        // initialize MIDI input
 
   #ifdef SINGLE_CORE
   emu_init();
