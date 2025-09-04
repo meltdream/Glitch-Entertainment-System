@@ -33,6 +33,7 @@ extern "C" {
 
 void analog_glitch_init();
 void analog_glitch_update();
+void analog_glitch_set_slot(uint8_t slot);
 uint8_t get_glitch_slot();
 bool is_glitch_enabled();
 void set_glitch_enabled(bool enabled);
