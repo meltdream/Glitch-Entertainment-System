@@ -17,6 +17,7 @@
 #include "esp_system.h"
 #include "esp_int_wdt.h"
 #include "esp_spiffs.h"
+#include "src/usb_msc_fat.h"
 
 #define PERF  // some stats about where we spend our time
 #include "src/emu.h"
@@ -67,7 +68,10 @@ bool _inited = false;
 
 void emu_init()
 {
-    std::string folder = "/" + _emu->name;
+    std::string folder = "/usb/" + _emu->name;
+    if (!fs_dir_exists(folder.c_str())) {
+        folder = "/spiffs/" + _emu->name;
+    }
     gui_start(_emu,folder.c_str());
     _drawn = _frame_counter;
 }
@@ -97,17 +101,22 @@ void emu_task(void* arg)
 
 esp_err_t mount_filesystem()
 {
-  printf("\n\n\nesp_8_bit\n\nmounting spiffs (will take ~15 seconds if formatting for the first time)....\n");
+  printf("\n\n\nesp_8_bit\n\nmounting filesystems....\n");
   uint32_t t = millis();
   esp_vfs_spiffs_conf_t conf = {
-    .base_path = "",
+    .base_path = "/spiffs",
     .partition_label = NULL,
     .max_files = 5,
     .format_if_mount_failed = true  // force?
   };
   esp_err_t e = esp_vfs_spiffs_register(&conf);
-  if (e != 0)
-    printf("Failed to mount or format filesystem: %d. Use 'ESP32 Sketch Data Upload' from 'Tools' menu\n",e);
+  if (e != ESP_OK)
+    printf("Failed to mount or format SPIFFS: %d. Use 'ESP32 Sketch Data Upload' from 'Tools' menu\n",e);
+
+  if (usb_msc_fat_init() != ESP_OK) {
+    printf("Failed to init USB MSC filesystem\n");
+  }
+
   vTaskDelay(1);
   printf("... mounted in %d ms\n",millis()-t);
   return e;
