@@ -17,6 +17,16 @@
 #include "esp_system.h"
 #include "esp_int_wdt.h"
 #include "esp_spiffs.h"
+#include "esp_vfs_fat.h"
+#include "sdmmc_cmd.h"
+#include "driver/sdspi_host.h"
+#include "driver/spi_common.h"
+
+#define PIN_NUM_MISO 19
+#define PIN_NUM_MOSI 23
+#define PIN_NUM_CLK  18
+#define PIN_NUM_CS   5
+#define MOUNT_POINT "/sd"
 
 #define PERF  // some stats about where we spend our time
 #include "src/emu.h"
@@ -67,7 +77,7 @@ bool _inited = false;
 
 void emu_init()
 {
-    std::string folder = "/" + _emu->name;
+    std::string folder = std::string(MOUNT_POINT) + "/" + _emu->name;
     gui_start(_emu,folder.c_str());
     _drawn = _frame_counter;
 }
@@ -97,20 +107,56 @@ void emu_task(void* arg)
 
 esp_err_t mount_filesystem()
 {
-  printf("\n\n\nesp_8_bit\n\nmounting spiffs (will take ~15 seconds if formatting for the first time)....\n");
+  printf("\n\n\nesp_8_bit\n\nmounting sd card....\n");
   uint32_t t = millis();
-  esp_vfs_spiffs_conf_t conf = {
-    .base_path = "",
-    .partition_label = NULL,
-    .max_files = 5,
-    .format_if_mount_failed = true  // force?
+
+  sdmmc_host_t host = SDSPI_HOST_DEFAULT();
+
+  spi_bus_config_t bus_cfg = {
+      .mosi_io_num = PIN_NUM_MOSI,
+      .miso_io_num = PIN_NUM_MISO,
+      .sclk_io_num = PIN_NUM_CLK,
+      .quadwp_io_num = -1,
+      .quadhd_io_num = -1,
+      .max_transfer_sz = 4000
   };
-  esp_err_t e = esp_vfs_spiffs_register(&conf);
-  if (e != 0)
-    printf("Failed to mount or format filesystem: %d. Use 'ESP32 Sketch Data Upload' from 'Tools' menu\n",e);
+  esp_err_t ret = spi_bus_initialize(host.slot, &bus_cfg, SDSPI_DEFAULT_DMA_CHAN);
+  if (ret == ESP_OK) {
+      sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
+      slot_config.gpio_cs = PIN_NUM_CS;
+      slot_config.host_id = host.slot;
+
+      esp_vfs_fat_mount_config_t mount_config = {
+          .format_if_mount_failed = false,
+          .max_files = 5,
+          .allocation_unit_size = 16 * 1024
+      };
+      sdmmc_card_t *card;
+      ret = esp_vfs_fat_sdspi_mount(MOUNT_POINT, &host, &slot_config, &mount_config, &card);
+      if (ret == ESP_OK) {
+          printf("... mounted in %d ms\n", millis() - t);
+          return ESP_OK;
+      }
+      printf("Failed to mount SD card: %d\n", ret);
+      spi_bus_free(host.slot);
+  } else {
+      printf("Failed to initialize bus: %d\n", ret);
+  }
+
+  printf("mounting spiffs (will take ~15 seconds if formatting for the first time)....\n");
+  t = millis();
+  esp_vfs_spiffs_conf_t conf = {
+      .base_path = MOUNT_POINT,
+      .partition_label = NULL,
+      .max_files = 5,
+      .format_if_mount_failed = true
+  };
+  ret = esp_vfs_spiffs_register(&conf);
+  if (ret != ESP_OK)
+      printf("Failed to mount or format filesystem: %d. Use 'ESP32 Sketch Data Upload' from 'Tools' menu\n", ret);
   vTaskDelay(1);
-  printf("... mounted in %d ms\n",millis()-t);
-  return e;
+  printf("... mounted in %d ms\n", millis() - t);
+  return ret;
 }
 
 void setup()
