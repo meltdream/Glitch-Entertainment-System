@@ -16,6 +16,7 @@
 */
 
 #include "emu.h"
+#include "analog_glitch.h"
 
 using namespace std;
 
@@ -1014,6 +1015,8 @@ void gui_update()
     n = get_hid_all(buf);
     if (n > 0)
         gui_hid(buf,n);
+        
+    analog_glitch_update();              // update analog glitch control
 }
 
 void gui_key(int keycode, int pressed, int mods)

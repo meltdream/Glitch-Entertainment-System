@@ -22,13 +22,14 @@
 #include "src/emu.h"
 #include "src/video_out.h"
 #include "src/gpio_input.h"
+#include "src/analog_glitch.h"
 
 // esp_8_bit
 // Atari 8 computers, NES and SMS game consoles on your TV with nothing more than a ESP32 and a sense of nostalgia
 // Supports NTSC/PAL composite video, Bluetooth Classic keyboards and joysticks
 
 //  Choose one of the video standards: PAL,NTSC
-#define VIDEO_STANDARD NTSC
+#define VIDEO_STANDARD PAL
 
 //  Choose one of the following emulators: EMU_NES,EMU_SMS,EMU_ATARI
 #define EMULATOR EMU_NES
@@ -118,6 +119,7 @@ void setup()
   _emu = NewEmulator();                     // create the emulator!
   hid_init("emu32");                        // bluetooth hid on core 1!
   gpio_input_init();                        // initialize gpio button inputs
+  analog_glitch_init();                     // initialize analog glitch control
 
   #ifdef SINGLE_CORE
   emu_init();
