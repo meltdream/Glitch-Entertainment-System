@@ -5,7 +5,7 @@
 #ifdef ESP_PLATFORM
 #include <Arduino.h>
 
-#define MIDI_RX_PIN 26
+#define MIDI_RX_PIN 27
 #define MIDI_GLITCH_CC 1
 
 struct midi_button_state {
